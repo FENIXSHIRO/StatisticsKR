@@ -10,6 +10,10 @@ namespace KR_HypothesisCheck.Controllers
 {
     public class HomeController : Controller
     {
+        //Размер массива со случайными величинами 
+        int n = 5;
+        const int nT = 5;
+
         private readonly ILogger<HomeController> _logger;
 
         public HomeController(ILogger<HomeController> logger)
@@ -22,117 +26,209 @@ namespace KR_HypothesisCheck.Controllers
             return View();
         }
 
-        public JsonResult CheckHypothesis()
+        //Функция создания диапазонов
+        double[] RangeSorting (double[] array)
+        {
+            double RangeMax = 0;
+            double RangeMin;
+            for (int i = 0; i < array.Length; i++)
+            {
+                if (RangeMax < array[i])
+                    RangeMax = array[i];
+            }
+            RangeMin = RangeMax;
+            for (int i = 0; i < array.Length; i++)
+            {
+                if (RangeMin > array[i])
+                    RangeMin = array[i];
+            }
+            double[] ArrayOfRanges = new double[n];
+            double diff = (RangeMax - RangeMin) / n;
+            for (int i = 0; i < n; i++) 
+            {
+                RangeMin += diff;
+                ArrayOfRanges[i] = RangeMin;
+                //Для тестов
+                Console.WriteLine(ArrayOfRanges[i]);
+            }
+            return ArrayOfRanges;
+        }
+
+        //Функция попадания выборки в диапазоны
+        double[] SortNum(double[] array, double[] arrDiapT)
+        {
+            int edgeNum = 0;
+            double[] arrNumT = new double[n];
+            double diff = arrDiapT[1] - arrDiapT[0];
+            for (int i = 0; i < array.Length; i++)
+            {
+                for (int j = 0; j < arrDiapT.Length; j++)
+                {
+                    if (array[i] < arrDiapT[j] && array[i] >= arrDiapT[j] - diff)
+                    {
+                        arrNumT[j]++;
+                    }
+                }
+                if (array[i] == arrDiapT[arrDiapT.Length - 1])
+                    edgeNum++;
+            }
+            arrNumT[arrNumT.Length - 1] += edgeNum;
+            for (int i = 0; i < arrNumT.Length; i++)
+            {
+                //Для тестов
+                Console.WriteLine(arrNumT[i]);
+            }
+            return arrNumT;
+        }
+
+        public JsonResult CheckHypothesis(double[] ArrayOfRange, double[] ArrayOfNumbers)
         {
             var DataModel = new DataModel();
             DataModel.Distribution = new List<double>();
 
-            //  Размер массива со случайными величинами 
-            const int n = 5;
-            //  Функция проверки гипотезы о нормальном распределении
-            bool ProverkaGipotezy(double[,] arr)
+            //Переменная содержащая значения длины информационного интервала
+            double diff = ArrayOfRange[1] - ArrayOfRange[0];
+
+            //Переменная содержащая значение количества всех выборов 
+            double alln = 0;
+
+            //Массив содержащий сдернюю величину каждого информационного интервала
+            double[] AvgIter = new double[n];
+
+            //Массив критических значений распределения х^2
+            double[] CritDisValuesFor005 = new double[10] { 3.8, 6.0, 7.8, 9.5, 11.1, 12.6, 14.1, 15.5, 16.9, 18.3 };
+
+            //Вспомагательные переменные
+            double xn = 0;
+            double x2n = 0;
+
+            //переменные для вычесления моды 
+            double modax = 0, moda = 0;
+
+
+
+            for (int i = 0; i < n; i++)
             {
-                //  Переменная содержащая значения длины информационного интервала
-                double diff = arr[1, 0] - arr[0, 0];
-                //  Переменная содержащая значение количества всех выборов 
-                double alln = 0;
-                //  Массив содержащий сдернюю величину каждого информационного интервала
-                double[] AvgIter = new double[n];
-                //  Массив критических значений распределения х^2
-                double[] CritDisValuesFor005 = new double[10] { 3.8, 6.0, 7.8, 9.5, 11.1, 12.6, 14.1, 15.5, 16.9, 18.3 };
-                //  Вспомагательные переменные
-                double xn = 0;
-                double x2n = 0;
-                //  Переменные для вычесления моды 
-                double modax = 0, moda = 0;
-                for (int i = 0; i < n; i++)
+                //Заполнение массива средних значений интервалов
+                AvgIter[i] = (ArrayOfRange[i] + (ArrayOfRange[i] - diff)) / 2;
+                //Подсчет всех выборов
+                alln += ArrayOfNumbers[i];
+                xn += AvgIter[i] * ArrayOfNumbers[i];
+                x2n += Math.Pow(AvgIter[i], 2) * ArrayOfNumbers[i];
+                //Получение моды
+                if (ArrayOfNumbers[i] > modax)
                 {
-                    //  Заполнение массива средних значений интервалов
-                    AvgIter[i] = (arr[i, 0] + (arr[i, 0] - diff)) / 2;
-                    //  Подсчет всех выборов
-                    alln += arr[i, 1];
-                    xn += AvgIter[i] * arr[i, 1];
-                    x2n += Math.Pow(AvgIter[i], 2) * arr[i, 1];
-                    //  Получение моды
-                    if (arr[i, 1] > modax)
-                    {
-                        modax = arr[i, 1];
-                        moda = arr[i, 0];
-                    }
-                }
-                // Выборочная средняя
-                double AvgSelect = xn / alln;
-                // Выборочная дисперсия
-                double VarSelect = (x2n / alln) - Math.Pow(AvgSelect, 2);
-                // Выборочное стандартное отклонение
-                double DeviaSelect = Math.Pow(VarSelect, 0.5);
-                // Массив содеражащий теоретические частоты
-                double[] TheoFreq = new double[n];
-                for (int i = 0; i < n; i++)
-                {
-                    // Испльзование формулы Гаусса для рсчета теоритеческих частот
-                    TheoFreq[i] = ((diff * alln) / DeviaSelect) * ((1 / (Math.Pow(2 * 3.14, 0.5)) * Math.Exp((Math.Pow((AvgIter[i] - AvgSelect) / DeviaSelect, 2) / -2))));
-                    // Тестирование значений
-                    Console.WriteLine(TheoFreq[i]);
-                    DataModel.Distribution.Add(TheoFreq[i]);
-                }
-                // Наблюдаемое значение критерия
-                double ObserValue = 0;
-                for (int i = 0; i < n; i++)
-                {
-                    // Вычисление наблюдаемого значения критерия
-                    ObserValue += (arr[i, 1] - TheoFreq[i]) / TheoFreq[i];
-                }
-                // Медиана выборки 
-                double median = 0;
-                if (n % 2 == 0)
-                    median = (arr[n / 2 - 1, 0] + arr[n / 2, 0]) / 2;
-                else
-                    median = (arr[n / 2, 0] + arr[n / 2 + 1, 0]) / 2;
-                // Тестирование значений
-                Console.WriteLine(moda);
-                DataModel.moda = moda;
-                Console.WriteLine(median);
-                DataModel.median = median;
-                Console.WriteLine(AvgSelect);
-                DataModel.AvgSelect = AvgSelect;
-                // Количество степеней свободы
-                int NumDegFree = n - 2 - 1;
-                // Проверка гипотезы
-                if (ObserValue < CritDisValuesFor005[NumDegFree] && moda <= AvgSelect + diff && moda >= AvgSelect - diff && median <= AvgSelect + diff && median >= AvgSelect - diff && AvgSelect - 3 * DeviaSelect < arr[0, 0] && AvgSelect + 3 * DeviaSelect > arr[n - 1, 0])
-                {
-                    DataModel.Conclusion = true;
-                    return true;
-                }
-                else
-                {
-                    DataModel.Conclusion = false;
-                    return false;
+                    modax = ArrayOfNumbers[i];
+                    moda = ArrayOfRange[i];
                 }
             }
 
 
-            DataModel.LabelData = new List<double>
+
+            //Выборочная средняя
+            double AvgSelect = xn / alln;
+
+            //Выборочная дисперсия
+            double VarSelect = (x2n / alln) - Math.Pow(AvgSelect, 2);
+
+            //Выборочное стандартное отклонение
+            double DeviaSelect = Math.Pow(VarSelect, 0.5);
+
+            //Массив содеражащий теоретические частоты
+            double[] TheoFreq = new double[n];
+
+
+
+            for (int i = 0; i < n; i++)
             {
-                975, 1000, 1025, 1050, 1075
-            };
-            DataModel.StatisticData = new List<double>
+                //Испльзование формулы Гаусса для рсчета теоритеческих частот
+                TheoFreq[i] = ((diff * alln) / DeviaSelect) * ((1 / (Math.Pow(2 * 3.14, 0.5)) * Math.Exp((Math.Pow((AvgIter[i] - AvgSelect) / DeviaSelect, 2) / -2))));
+                //Тестирование значений
+                Console.WriteLine(TheoFreq[i]);
+                DataModel.Distribution.Add(TheoFreq[i]);
+            }
+
+            //Наблюдаемое значение критерия
+            double ObserValue = 0;
+            for (int i = 0; i < n; i++)
             {
-                6, 38, 44, 34, 8
-            };
+                //Вычисление наблюдаемого значения критерия
+                ObserValue += (ArrayOfNumbers[i] - TheoFreq[i]) / TheoFreq[i];
+            }
 
+            //Медиана выборки 
+            double median = 0;
+            if (n % 2 == 0)
+                median = (ArrayOfRange[n / 2 - 1] + ArrayOfRange[n / 2]) / 2;
+            else
+                median = (ArrayOfRange[n / 2] + ArrayOfRange[n / 2 + 1]) / 2;
 
-            // Массив со занчениями выборки(Отсортирован)
-            double[,] temp = new double[n, 2] { { 975, 6 }, { 1000, 38 }, { 1025, 44 }, { 1050, 34 }, { 1075, 8 } };
-            // Вызов функции
-            Console.WriteLine(ProverkaGipotezy(temp));
+            //Тестовые значения
+            DataModel.moda = moda;
+            DataModel.median = median;
+            DataModel.AvgSelect = AvgSelect;
 
+            //Количество степеней свободы
+            int NumDegFree = n - 2 - 1;
 
-            // Вывод JSON
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            string jsonString = JsonSerializer.Serialize(DataModel, options);
+            //Проверка гипотезы
+            if (ObserValue < CritDisValuesFor005[NumDegFree] && 
+                moda <= AvgSelect + diff && moda >= AvgSelect - diff && 
+                median <= AvgSelect + diff && median >= AvgSelect - diff && 
+                AvgSelect - 3 * DeviaSelect < ArrayOfRange[0] && 
+                AvgSelect + 3 * DeviaSelect > ArrayOfRange[n - 1]
+                )
+            {
+                DataModel.Conclusion = true;
 
-            return Json(jsonString);
+                //  Ковертация модели в json строку
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonString = JsonSerializer.Serialize(DataModel, options);
+                return Json(jsonString); // Вывод данных с положительным резултатом
+
+            } else {
+
+                DataModel.Conclusion = false;
+
+                //  Ковертация модели в json строку
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonString = JsonSerializer.Serialize(DataModel, options);
+                return Json(jsonString); // Вывод данных с отрицательным резултатом
+            }
+        }
+
+        public JsonResult GetResult(IFormFile file) // Контроллер с основной логикой
+        {
+            List<string> listA = new List<string>();
+
+            var filePath = Path.GetTempFileName();
+
+            using (var reader = new StreamReader(filePath))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var values = line.Split(';');
+                    listA.AddRange(values);
+                }
+            }
+
+            double[] arrTempT = new double[listA.Count];
+
+            for (int i = 0; i < listA.Count; i++)
+            {
+                arrTempT[i] = Convert.ToDouble(listA[i]);
+            }
+
+            //Массив содержащий диапазоны
+            double[] arrDiap = new double[nT] { 975, 1000, 1025, 1050, 1075 };
+            double[] arrDiapT = RangeSorting(arrTempT);
+
+            //Массив содержащий количества попаданий в диапазоны
+            double[] arrNum = new double[nT] { 6, 38, 44, 34, 8 };
+            double[] arrNumT = SortNum(arrTempT, arrDiapT);
+
+            return CheckHypothesis(arrDiapT, arrNumT);
         }
 
 

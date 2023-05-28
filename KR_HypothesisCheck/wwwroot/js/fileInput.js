@@ -21,7 +21,7 @@ fileInput.addEventListener('change', () => {
 
     // Получить данные из контроллера и вывести график из resulChart.js
     $.ajax({
-        url: '/Home/CheckHypothesis',
+        url: '/Home/GetResult',
         type: 'Post',
         dataType: 'json',
         success: function (json) {
