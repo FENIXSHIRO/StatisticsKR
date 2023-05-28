@@ -81,7 +81,7 @@ namespace KR_HypothesisCheck.Controllers
             return arrNumT;
         }
 
-        public JsonResult CheckHypothesis(double[] ArrayOfRange, double[] ArrayOfNumbers)
+        public DataModel CheckHypothesis(double[] ArrayOfRange, double[] ArrayOfNumbers)
         {
             var DataModel = new DataModel();
             DataModel.Distribution = new List<double>();
@@ -180,30 +180,25 @@ namespace KR_HypothesisCheck.Controllers
                 )
             {
                 DataModel.Conclusion = true;
-
-                //  Ковертация модели в json строку
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                string jsonString = JsonSerializer.Serialize(DataModel, options);
-                return Json(jsonString); // Вывод данных с положительным резултатом
+                return DataModel;
 
             } else {
 
                 DataModel.Conclusion = false;
-
-                //  Ковертация модели в json строку
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                string jsonString = JsonSerializer.Serialize(DataModel, options);
-                return Json(jsonString); // Вывод данных с отрицательным резултатом
+                return DataModel;
             }
         }
 
-        public JsonResult GetResult(IFormFile file) // Контроллер с основной логикой
+        public JsonResult GetResult(IFormFile file)
         {
+            var DataModel = new DataModel();
+            DataModel.Distribution = new List<double>();
+
             List<string> listA = new List<string>();
 
             var filePath = Path.GetTempFileName();
 
-            using (var reader = new StreamReader(filePath))
+            using (var reader = new StreamReader( file.OpenReadStream() ) )
             {
                 while (!reader.EndOfStream)
                 {
@@ -228,7 +223,15 @@ namespace KR_HypothesisCheck.Controllers
             double[] arrNum = new double[nT] { 6, 38, 44, 34, 8 };
             double[] arrNumT = SortNum(arrTempT, arrDiapT);
 
-            return CheckHypothesis(arrDiapT, arrNumT);
+            DataModel = CheckHypothesis(arrDiapT, arrNumT);
+            DataModel.LabelData = arrDiapT.ToList();
+            DataModel.StatisticData = arrNumT.ToList();
+
+            // Вывод JSON
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            string jsonString = JsonSerializer.Serialize(DataModel, options);
+
+            return Json(jsonString);
         }
 
 

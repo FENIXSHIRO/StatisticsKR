@@ -18,17 +18,23 @@ fileInput.addEventListener('change', () => {
         return;
     }
 
+    var inpFile = $('#fileInput').get(0).files[0];
+    var formData = new FormData;
+    formData.append('file', inpFile);
 
     // Получить данные из контроллера и вывести график из resulChart.js
     $.ajax({
         url: '/Home/GetResult',
         type: 'Post',
+        data: formData,
+        contentType: false,
+        processData: false,
         dataType: 'json',
         success: function (json) {
             DrawChart(json);
         },
         error: function (error) {
-            alert(error);
+            alert("Ajax err: " + error);
         }
     });
 
