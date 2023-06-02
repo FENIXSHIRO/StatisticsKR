@@ -1,6 +1,10 @@
-﻿const fileInput = document.getElementById('fileInput');
+﻿const fileInput = document.getElementById('fileInput'); // Получение элемента ввода файла
+
+// Элементы для скрытия/отображения
 const inputDiv = document.getElementById('inputDiv');
 const btnChangeFile = document.getElementById('btnChangeFile');
+const returnBlock = document.getElementById('returnBlock');
+
 
 fileInput.addEventListener('change', () => {
     const file = fileInput.files[0];
@@ -33,6 +37,10 @@ fileInput.addEventListener('change', () => {
         processData: false,
         dataType: 'json',
         success: function (json) { // При успешном получении данных
+
+            // Отобразить блок вывода
+            returnBlock.style.display = "block";
+
             // Вывести таблицу
             DrawTable(json); 
 
