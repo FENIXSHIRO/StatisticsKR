@@ -1,4 +1,6 @@
 ﻿const fileInput = document.getElementById('fileInput');
+const inputDiv = document.getElementById('inputDiv');
+const btnChangeFile = document.getElementById('btnChangeFile');
 
 fileInput.addEventListener('change', () => {
     const file = fileInput.files[0];
@@ -30,10 +32,19 @@ fileInput.addEventListener('change', () => {
         contentType: false,
         processData: false,
         dataType: 'json',
-        success: function (json) {
+        success: function (json) { // При успешном получении данных
+            // Вывести таблицу
+            DrawTable(json); 
+
+            // Вывести график
             DrawChart(json);
+
+            // Блокировка загрузки файлов
+            inputDiv.style.display = "none";
+            btnChangeFile.style.display = "block";
+
         },
-        error: function (error) {
+        error: function (error) { // При ошибке
             alert("Ajax err: " + error);
         }
     });

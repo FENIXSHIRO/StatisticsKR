@@ -2,36 +2,56 @@
     ViewData["Title"] = "Проверка распределения";
 }
 
-<h1>Проверка статистических данных</h1>
-<h3>для выпущенной партии процессоров</h3>
-
-<!-- Ввод файла -->
-<div class="mb-3">
-    <label for="formFile" class="form-label">CSV Файл с статистическими данными</label>
-    <input class="form-control" type="file" id="fileInput">
+<div class="container">
+    <h1 class="text-light">Проверка статистических данных для выпущенной партии процессоров</h1>
 </div>
 
+<div class="bg-light pt-3">
+
+    <div class="container">
 
 
-<!-- Уведомлении о неверном файле -->
-<div class="toast-container position-fixed top-50 start-0 p-3">
-    <div class="toast align-items-center text-light bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" id="liveToast">
-        <div class="d-flex">
-            <div class="toast-body">
-                Выбран неверный тип файла.
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+
+        <!-- Ввод файла -->
+        <div id="inputDiv" class="mb-3">
+            <h3>Выбор файла с данными</h3>
+            <label for="formFile" class="form-label">CSV Файл с статистическими данными</label>
+            <input class="form-control" type="file" id="fileInput">
         </div>
+
+        <!-- Кнопка "Выбрать другой файл" | Спрятано -->
+        <div id="btnChangeFile" style="display: none" class="mb-3">
+            <button class="btn btn-outline-secondary" onclick="location.reload();">Выбрать другой файл</button>
+        </div>
+
+        <!-- Уведомлении о неверном файле | Спрятано -->
+        <div class="toast-container position-fixed top-50 start-0 p-3">
+            <div class="toast align-items-center text-light bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" id="liveToast">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        Выбран неверный тип файла.
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Таблица -->
+        <h3>Данные</h3>
+        <table class="table table-striped" id="table">
+        </table>
+
+        <!-- Поле вывода графика -->
+        <div>
+            <canvas style="width: 50vw" id="myChart"></canvas>
+        </div>
+
+        <p id="text"></p>
     </div>
+
 </div>
 
 
-<!-- Поле вывода графика -->
-<div>
-    <canvas style="width: 50vw" id="myChart"></canvas>
-</div>
-
-<p id="text"></p>
 
 <script src="~/js/resultChart.js"></script>
 <script src="~/js/fileInput.js"></script>

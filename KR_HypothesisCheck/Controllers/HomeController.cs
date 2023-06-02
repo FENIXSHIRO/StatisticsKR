@@ -12,7 +12,6 @@ namespace KR_HypothesisCheck.Controllers
     {
         //Размер массива со случайными величинами 
         int n = 5;
-        const int nT = 5;
 
         private readonly ILogger<HomeController> _logger;
 
@@ -215,12 +214,10 @@ namespace KR_HypothesisCheck.Controllers
                 arrTempT[i] = Convert.ToDouble(listA[i]);
             }
 
-            //Массив содержащий диапазоны
-            double[] arrDiap = new double[nT] { 975, 1000, 1025, 1050, 1075 };
+
             double[] arrDiapT = RangeSorting(arrTempT);
 
-            //Массив содержащий количества попаданий в диапазоны
-            double[] arrNum = new double[nT] { 6, 38, 44, 34, 8 };
+
             double[] arrNumT = SortNum(arrTempT, arrDiapT);
 
             DataModel = CheckHypothesis(arrDiapT, arrNumT);
