@@ -46,7 +46,7 @@ function DrawChart(json) {
             label: 'Исходные данные',
             type: 'bar',
             backgroundColor: 'rgba(250, 200, 10, 0.9)',
-            borderColor: 'rgb(230, 180, 10)',
+            borderColor: 'rgb(230, 140, 20)',
             borderWidth: 1,
             data: mapArr(obj.StatisticData),
         },]
