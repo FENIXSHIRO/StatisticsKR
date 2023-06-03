@@ -4,6 +4,7 @@
 const inputDiv = document.getElementById('inputDiv');
 const btnChangeFile = document.getElementById('btnChangeFile');
 const returnBlock = document.getElementById('returnBlock');
+const typeSelect = document.getElementById('typeSelect');
 
 
 fileInput.addEventListener('change', () => {
@@ -27,6 +28,7 @@ fileInput.addEventListener('change', () => {
     var inpFile = $('#fileInput').get(0).files[0];
     var formData = new FormData;
     formData.append('file', inpFile);
+    formData.append('type', typeSelect.value);
 
     // Получить данные из контроллера и вывести график из resulChart.js
     $.ajax({

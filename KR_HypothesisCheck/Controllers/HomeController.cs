@@ -188,8 +188,10 @@ namespace KR_HypothesisCheck.Controllers
             }
         }
 
-        public JsonResult GetResult(IFormFile file)
+
+        public JsonResult GetResult(IFormFile file, string type)
         {
+
             var DataModel = new DataModel();
             DataModel.Distribution = new List<double>();
 
@@ -221,6 +223,7 @@ namespace KR_HypothesisCheck.Controllers
             double[] arrNumT = SortNum(arrTempT, arrDiapT);
 
             DataModel = CheckHypothesis(arrDiapT, arrNumT);
+
             DataModel.LabelData = arrDiapT.ToList();
             DataModel.StatisticData = arrNumT.ToList();
 
