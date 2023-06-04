@@ -1,6 +1,31 @@
-﻿function mapArr(arr) {
+﻿const exportAsPNG = document.getElementById('exportAsPNG');
+function mapArr(arr) {
     return arr = arr.map(num => Number(num.toFixed(2)));
 }
+
+function conclusionDescription(conclusion) {
+    if (conclusion == "Распределение подчиняется нормальному закону") {
+        return "Исходя из анализа данных, отклонения производства в пределах нормы. Проведение проверки поизводственной линии не требуется."
+    }
+
+    if (conclusion == "Распределение не подчиняется нормальному закону") {
+        return "Исходя из анализа данных выявлены нестандартные статистические значения. Требуется проведение проверки поизводственной линии."
+    }
+
+    if (conclusion == "Распределение подчиняется закону Пуассона") {
+        return "Исходя из анализа данных представлены вероятности выпуска бракованого процесоора в выпущенной партии."
+    }
+
+    if (conclusion == "Распределение не подчиняется закону Пуассона") {
+        return "Исходя из анализа данных выявлены нестандартные статистические значения. Требуется проведение проверки поизводственной линии."
+    }
+
+    if (conclusion == "Введенный набор данных не может подчиняется закону Пуассона") {
+        return " "
+    }
+
+}
+
 function addRow(data, length, label) {
     const table = document.getElementById('table');
     const tr = table.insertRow();
@@ -16,39 +41,56 @@ function addRow(data, length, label) {
 function DrawTable(json) {
     let obj = JSON.parse(json);
 
-    /*
-    
-    addRow(obj.LabelData, obj.LabelData.length, "Группы частот");
-    addRow(obj.StatisticData, obj.LabelData.length, "Количество");
-    addRow(obj.Distribution, obj.LabelData.length, "Количество по функции");
+    if (obj.LabelData == null) {
+        returnBlock.style.display = "none";
+        return;
+    }
 
-    */
-
-    addRow(mapArr(obj.LabelData), obj.LabelData.length, "Группы частот, Гц");
-    addRow(mapArr(obj.StatisticData), obj.LabelData.length, "Количество, Шт");
-    addRow(mapArr(obj.Distribution), obj.LabelData.length, "Количество по функции");
+    // Небольшой костыль
+    if (obj.Conclusion == "Распределение подчиняется нормальному закону" || obj.Conclusion == "Распределение не подчиняется нормальному закону") {
+        addRow(mapArr(obj.LabelData), obj.LabelData.length, "Интервалы частот частот, Гц");
+        addRow(mapArr(obj.StatisticData), obj.LabelData.length, "Количество, Шт");
+        addRow(mapArr(obj.Distribution), obj.LabelData.length, "Теоретическое количество, Шт");
+    } else {
+        addRow(mapArr(obj.LabelData), obj.LabelData.length, "Количество бракованных единиц в партии");
+        addRow(mapArr(obj.StatisticData), obj.LabelData.length, "Эмпиричская вероятность обнаружения определенного количества брака в партии");
+        addRow(mapArr(obj.Distribution), obj.LabelData.length, "Теоретическая вероятность обнаружения  определенного количества брака в партии");
+    } 
 }
 
-function DrawChart(json) {
+function DrawChart(json, ops) {
     let obj = JSON.parse(json);
+    let thisOps = JSON.parse(ops);
+
+    document.getElementById('ConclusionText').textContent = obj.Conclusion;
+    document.getElementById('text').textContent = conclusionDescription(obj.Conclusion);
+
+    if (obj.Distribution == null) {
+        return;
+    }
+
     let labels = mapArr(obj.LabelData);
 
     const data = {
         labels: labels,
         datasets: [{
             label: 'Функция',
-            type: 'line',
+            type: thisOps.firstChart,
             borderColor: 'rgb(10, 10, 10)',
-            backgroundColor: 'rgb(255, 255, 255)',
+            borderWidth: 1,
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
             data: mapArr(obj.Distribution),
-            tension: 0.3
+            tension: thisOps.firstChartTension,
+            fill: thisOps.fill
         }, {
             label: 'Исходные данные',
-            type: 'bar',
+            type: thisOps.secondChart,
             backgroundColor: 'rgba(250, 200, 10, 0.9)',
             borderColor: 'rgb(230, 140, 20)',
             borderWidth: 1,
             data: mapArr(obj.StatisticData),
+            tension: thisOps.secondChartTension,
+            fill: thisOps.fill
         },]
     };
 
@@ -60,13 +102,15 @@ function DrawChart(json) {
                 y: {
                     title: {
                         display: true,
-                        text: 'Количество, Шт.'
+                        // Костыльный тернарный оператор на проверку вида распределения
+                        text: (obj.Conclusion == "Распределение подчиняется нормальному закону" || obj.Conclusion == "Распределение не подчиняется нормальному закону") ? 'Количество, Шт.' : 'Вероятность'
                     }
                 },
                 x: {
                     title: {
                         display: true,
-                        text: 'Тактовая сачтота, Гц.'
+                        // Тоже самое что и выше
+                        text: (obj.Conclusion == "Распределение подчиняется нормальному закону" || obj.Conclusion == "Распределение не подчиняется нормальному закону") ? 'Тактовая сачтота, Гц.' : 'Случаи произведёного брака'
                     }
                 }
             }
@@ -75,5 +119,15 @@ function DrawChart(json) {
 
     const myChart = new Chart(document.getElementById('myChart'), config);
 
-    document.getElementById('text').textContent = obj.moda + " | " + obj.median + " | " + obj.AvgSelect + " | " + obj.Conclusion;
+    document.getElementById('debugText').textContent = obj.moda + " | " + obj.median + " | " + obj.AvgSelect + " | " + obj.Conclusion;
+
+    // Скачивание PNG графика
+    exportAsPNG.onclick = function () {
+        var a = document.createElement('a');
+        a.href = myChart.toBase64Image();
+        a.download = 'chart.png';
+
+        // Скачивание пнг
+        a.click();
+    }
 }

@@ -12,6 +12,8 @@ namespace KR_HypothesisCheck.Controllers
     {
         //Размер массива со случайными величинами 
         int n = 5;
+        //Массив критических значений распределения х^2
+        double[] CritDisValuesFor005 = new double[10] { 3.8, 6.0, 7.8, 9.5, 11.1, 12.6, 14.1, 15.5, 16.9, 18.3 };
 
         private readonly ILogger<HomeController> _logger;
 
@@ -25,8 +27,15 @@ namespace KR_HypothesisCheck.Controllers
             return View();
         }
 
-        //Функция создания диапазонов
-        double[] RangeSorting (double[] array)
+        //Функция счета факториала
+        int Factorial(int n)
+        {
+            if (n == 1 || n == 0) return 1;
+            return n * Factorial(n - 1);
+        }
+
+        //Функция создания диапазонов для Нормального
+        double[] RangeSortingNorm (double[] array)
         {
             double RangeMax = 0;
             double RangeMin;
@@ -53,8 +62,20 @@ namespace KR_HypothesisCheck.Controllers
             return ArrayOfRanges;
         }
 
-        //Функция попадания выборки в диапазоны
-        double[] SortNum(double[] array, double[] arrDiapT)
+        //Функция создания диапазонов для Пуассона
+        double[] RangeSortingPyass(double[] array)
+        {
+            double RangeMax = 1;
+            for (int i = 0; i < array.Length; i++)
+                if (RangeMax < array[i]) RangeMax = array[i];
+            double[] ArrayOfRanges = new double[Convert.ToInt32(RangeMax) + 1];
+            for (int i = 0; i < ArrayOfRanges.Length; i++)
+                ArrayOfRanges[i] = i;
+            return ArrayOfRanges;
+        }
+
+        //Функция попадания выборки в диапазоны для Нормального
+        double[] SortNumNorm(double[] array, double[] arrDiapT)
         {
             int edgeNum = 0;
             double[] arrNumT = new double[n];
@@ -79,8 +100,62 @@ namespace KR_HypothesisCheck.Controllers
             }
             return arrNumT;
         }
+        //Функция попадания выборки в диапазоны для Пуассона
+        double[] SortNumPyass(double[] array, double[] arrDiapP)
+        {
+            double[] arrNumP = new double[arrDiapP.Length]; 
+            for (int i = 0; i < array.Length; i++)
+                for (int j = 0;j < arrDiapP.Length; j++)
+                    if (array[i] == arrDiapP[j]) arrNumP[j]++;
+            return arrNumP;
+        }
+        //Функция эмпирических вероятностей для Пуассона
+        double[] SortProbPyass(double[] arrNumP)
+        {
+            double[] arrProbP = new double[arrNumP.Length];
+            double AllNum = 0;
+            for (int i = 0; i < arrNumP.Length; i++)
+                AllNum += arrNumP[i];
+            for (int i = 0; i < arrNumP.Length; i++)
+                arrProbP[i] = arrNumP[i]/AllNum;
+            return arrProbP;
+        }
+        //Проверка гипотезы по закону Пуассона
+        public DataModel CheckHypothesisPyass(double[] ArrayOfRange, double[] arrNumP)
+        {
+            var DataModel = new DataModel();
+            DataModel.Distribution = new List<double>();
+            //Среднее число брака в партии
+            double alpha = 0;
+            for(int i = 0; i < ArrayOfRange.Length; i++)
+                alpha += arrNumP[i] * ArrayOfRange[i];
+            double AllNum = 0;
+            for (int i = 0; i < arrNumP.Length; i++)
+                AllNum += arrNumP[i];
+            alpha /= AllNum;
+            double[] TheoProb = new double[arrNumP.Length];
+            double ObserValue = 0;
+            for (int i = 0; i < TheoProb.Length; i++)
+            {
+                TheoProb[i] = (Math.Pow(alpha, i) * Math.Exp(-alpha))/Factorial(i);
+                ObserValue += Math.Pow(arrNumP[i] - (AllNum * TheoProb[i]), 2)/(AllNum * TheoProb[i]);
+                DataModel.Distribution.Add(TheoProb[i]);
+            }
+            int NumDegFree = arrNumP.Length - 1 - 1;
+            if (ObserValue < CritDisValuesFor005[NumDegFree])
+            {
+                DataModel.Conclusion = "Распределение подчиняется закону Пуассона";
+                return DataModel;
+            }
+            else
+            {
+                DataModel.Conclusion = "Распределение не подчиняется закону Пуассона";
+                return DataModel;
+            }
+        }
 
-        public DataModel CheckHypothesis(double[] ArrayOfRange, double[] ArrayOfNumbers)
+        //Проверка гипотезы по Нормльному закону
+        public DataModel CheckHypothesisNorm(double[] ArrayOfRange, double[] ArrayOfNumbers)
         {
             var DataModel = new DataModel();
             DataModel.Distribution = new List<double>();
@@ -93,9 +168,6 @@ namespace KR_HypothesisCheck.Controllers
 
             //Массив содержащий сдернюю величину каждого информационного интервала
             double[] AvgIter = new double[n];
-
-            //Массив критических значений распределения х^2
-            double[] CritDisValuesFor005 = new double[10] { 3.8, 6.0, 7.8, 9.5, 11.1, 12.6, 14.1, 15.5, 16.9, 18.3 };
 
             //Вспомагательные переменные
             double xn = 0;
@@ -178,19 +250,21 @@ namespace KR_HypothesisCheck.Controllers
                 AvgSelect + 3 * DeviaSelect > ArrayOfRange[n - 1]
                 )
             {
-                DataModel.Conclusion = true;
+                DataModel.Conclusion = "Распределение подчиняется нормальному закону";
                 return DataModel;
-
-            } else {
-
-                DataModel.Conclusion = false;
+            } 
+            else 
+            {
+                DataModel.Conclusion = "Распределение не подчиняется нормальному закону";
                 return DataModel;
             }
         }
 
 
-        public JsonResult GetResult(IFormFile file, string type)
+        public JsonResult GetResult(IFormFile file, string type, int intervals)
         {
+
+            n = intervals; //Значение количества интервалов
 
             var DataModel = new DataModel();
             DataModel.Distribution = new List<double>();
@@ -216,16 +290,40 @@ namespace KR_HypothesisCheck.Controllers
                 arrTempT[i] = Convert.ToDouble(listA[i]);
             }
 
+            switch (type)
+            {
+                case "pyasson":
+                    double[] arrDiapP = RangeSortingPyass(arrTempT);
+                    double[] arrNumP = SortNumPyass(arrTempT, arrDiapP);
+                    double[] arrProbP = SortProbPyass(arrNumP);
 
-            double[] arrDiapT = RangeSorting(arrTempT);
+                    //DataModel = CheckHypothesisPyass(arrDiapP, arrNumP);
+                    //DataModel.LabelData = arrDiapP.ToList();
+                    //DataModel.StatisticData = arrProbP.ToList();
 
+                    try
+                    {
+                        DataModel = CheckHypothesisPyass(arrDiapP, arrNumP);
+                        DataModel.LabelData = arrDiapP.ToList();
+                        DataModel.StatisticData = arrProbP.ToList();
+                    }
+                    catch (Exception e)
+                    {
+                        DataModel.Conclusion = "Введенный набор данных не может подчиняется закону Пуассона";
+                    }
 
-            double[] arrNumT = SortNum(arrTempT, arrDiapT);
+                    break;
+                case "normal":
+                    double[] arrDiapN = RangeSortingNorm(arrTempT);
+                    double[] arrNumN = SortNumNorm(arrTempT, arrDiapN);
 
-            DataModel = CheckHypothesis(arrDiapT, arrNumT);
-
-            DataModel.LabelData = arrDiapT.ToList();
-            DataModel.StatisticData = arrNumT.ToList();
+                    DataModel = CheckHypothesisNorm(arrDiapN, arrNumN);
+                    DataModel.LabelData = arrDiapN.ToList();
+                    DataModel.StatisticData = arrNumN.ToList();
+                    break;
+                default:
+                    break;
+            }
 
             // Вывод JSON
             var options = new JsonSerializerOptions { WriteIndented = true };

@@ -11,5 +11,5 @@ public class DataModel
     public double moda { get; set; }
     public double median { get; set; }
     public double AvgSelect { get; set; }
-    public bool Conclusion { get; set; }
+    public string Conclusion { get; set; }
 }

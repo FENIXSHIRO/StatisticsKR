@@ -7,15 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\js\fileInput.js" />
+    <Content Remove="wwwroot\js\input.js" />
   </ItemGroup>
 
   <ItemGroup>
-    <_ContentIncludedByDefault Remove="wwwroot\js\fileInput.js" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="wwwroot\js\fileInput.js" />
+    <None Include="wwwroot\js\input.js" />
   </ItemGroup>
 
 </Project>
