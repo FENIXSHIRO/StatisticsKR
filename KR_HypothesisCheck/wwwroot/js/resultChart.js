@@ -1,6 +1,31 @@
-﻿function mapArr(arr) {
+﻿const exportAsPNG = document.getElementById('exportAsPNG');
+function mapArr(arr) {
     return arr = arr.map(num => Number(num.toFixed(2)));
 }
+
+function conclusionDescription(conclusion) {
+    if (conclusion == "Распределение подчиняется нормальному закону") {
+        return "Исходя из анализа данных, отклонения производства в пределах нормы. Проведение проверки поизводственной линии не требуется."
+    }
+
+    if (conclusion == "Распределение не подчиняется нормальному закону") {
+        return "Исходя из анализа данных выявлены нестандартные статистические значения. Требуется проведение проверки поизводственной линии."
+    }
+
+    if (conclusion == "Распределение подчиняется закону Пуассона") {
+        return "Исходя из анализа данных представлены вероятности выпуска бракованого процесоора в выпущенной партии."
+    }
+
+    if (conclusion == "Распределение не подчиняется закону Пуассона") {
+        return "Исходя из анализа данных выявлены нестандартные статистические значения. Требуется проведение проверки поизводственной линии."
+    }
+
+    if (conclusion == "Введенный набор данных не может подчиняется закону Пуассона") {
+        return " "
+    }
+
+}
+
 function addRow(data, length, label) {
     const table = document.getElementById('table');
     const tr = table.insertRow();
@@ -22,7 +47,7 @@ function DrawTable(json) {
     }
 
     // Небольшой костыль
-    if (obj.Conclusion == "Распределение подчиняется нормальному закону" || obj.Conclusion == "Распределение не подчиняется закону Пуассона") {
+    if (obj.Conclusion == "Распределение подчиняется нормальному закону" || obj.Conclusion == "Распределение не подчиняется нормальному закону") {
         addRow(mapArr(obj.LabelData), obj.LabelData.length, "Интервалы частот частот, Гц");
         addRow(mapArr(obj.StatisticData), obj.LabelData.length, "Количество, Шт");
         addRow(mapArr(obj.Distribution), obj.LabelData.length, "Теоретическое количество, Шт");
@@ -38,7 +63,7 @@ function DrawChart(json, ops) {
     let thisOps = JSON.parse(ops);
 
     document.getElementById('ConclusionText').textContent = obj.Conclusion;
-    document.getElementById('text').textContent = obj.Conclusion;
+    document.getElementById('text').textContent = conclusionDescription(obj.Conclusion);
 
     if (obj.Distribution == null) {
         return;
@@ -78,14 +103,14 @@ function DrawChart(json, ops) {
                     title: {
                         display: true,
                         // Костыльный тернарный оператор на проверку вида распределения
-                        text: (obj.Conclusion == "Распределение подчиняется нормальному закону" || obj.Conclusion == "Распределение не подчиняется закону Пуассона") ? 'Количество, Шт.' : 'Вероятность'
+                        text: (obj.Conclusion == "Распределение подчиняется нормальному закону" || obj.Conclusion == "Распределение не подчиняется нормальному закону") ? 'Количество, Шт.' : 'Вероятность'
                     }
                 },
                 x: {
                     title: {
                         display: true,
                         // Тоже самое что и выше
-                        text: (obj.Conclusion == "Распределение подчиняется нормальному закону" || obj.Conclusion == "Распределение не подчиняется закону Пуассона") ? 'Тактовая сачтота, Гц.' : 'Случаи произведёного брака'
+                        text: (obj.Conclusion == "Распределение подчиняется нормальному закону" || obj.Conclusion == "Распределение не подчиняется нормальному закону") ? 'Тактовая сачтота, Гц.' : 'Случаи произведёного брака'
                     }
                 }
             }
@@ -94,5 +119,15 @@ function DrawChart(json, ops) {
 
     const myChart = new Chart(document.getElementById('myChart'), config);
 
-    document.getElementById('debugText').textContent = obj.Conclusion;
+    document.getElementById('debugText').textContent = obj.moda + " | " + obj.median + " | " + obj.AvgSelect + " | " + obj.Conclusion;
+
+    // Скачивание PNG графика
+    exportAsPNG.onclick = function () {
+        var a = document.createElement('a');
+        a.href = myChart.toBase64Image();
+        a.download = 'chart.png';
+
+        // Скачивание пнг
+        a.click();
+    }
 }

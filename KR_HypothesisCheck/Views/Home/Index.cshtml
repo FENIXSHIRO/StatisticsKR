@@ -21,13 +21,13 @@
 
             <select class="form-select mb-3" aria-label="Default select example" id="typeSelect">
                 <option value="none" selected>Выбор типа операции</option>
-                <option value="normal">Проверка статистических даннх одной партии</option>
-                <option value="pyasson">Проверка статистических даннх множества партий</option>
+                <option value="normal">Проверка статистических данных одной партии</option>
+                <option value="pyasson">Проверка статистических данных множества партий</option>
             </select>
 
             <!-- Ввод файла -->
             <h3>Выбор файла с данными</h3>
-            <label for="formFile" class="form-label">CSV Файл с статистическими данными</label>
+            <label for="formFile" class="form-label">CSV Файл статистических данных</label>
             <input class="form-control mb-3" type="file" id="fileInput">
 
 
@@ -114,16 +114,18 @@
             <!-- Таблица -->
             <div class="flex-row mb-2 border-top border-secondary-subtle">
                 <h3>Данные</h3>
-                <a href="#" class="link-success"> XLS </a>
-                <a href="#" class="link-success"> CSV </a>
-                <a href="#" class="link-primary"> TXT </a>
+                <a href="#" id="exportAsXLS" class="link-success"> XLS </a>
+                <a href="#" id="exportAsCSV" class="link-success"> CSV </a>
             </div>
             <table class="table table-striped" id="table">
             </table>
 
             <!-- Поле вывода графика -->
             <div>
-                <h4>График</h4>
+                <div class="flex-row mb-2 border-top border-secondary-subtle">
+                    <h4>График</h4>
+                    <a href="#" id="exportAsPNG" class="link-warning"> PNG </a>
+                </div>
                 <canvas style="width: 50vw" id="myChart"></canvas>
             </div>
         </div>
@@ -137,3 +139,4 @@
 
 <script src="~/js/resultChart.js"></script>
 <script src="~/js/input.js"></script>
+<script src="~/js/exportFile.js"></script>
