@@ -261,8 +261,10 @@ namespace KR_HypothesisCheck.Controllers
         }
 
 
-        public JsonResult GetResult(IFormFile file, string type)
+        public JsonResult GetResult(IFormFile file, string type, int intervals)
         {
+
+            n = intervals; //Значение количества интервалов
 
             var DataModel = new DataModel();
             DataModel.Distribution = new List<double>();
@@ -294,13 +296,27 @@ namespace KR_HypothesisCheck.Controllers
                     double[] arrDiapP = RangeSortingPyass(arrTempT);
                     double[] arrNumP = SortNumPyass(arrTempT, arrDiapP);
                     double[] arrProbP = SortProbPyass(arrNumP);
-                    DataModel = CheckHypothesisPyass(arrDiapP, arrNumP);
-                    DataModel.LabelData = arrDiapP.ToList();
-                    DataModel.StatisticData = arrProbP.ToList();
+
+                    //DataModel = CheckHypothesisPyass(arrDiapP, arrNumP);
+                    //DataModel.LabelData = arrDiapP.ToList();
+                    //DataModel.StatisticData = arrProbP.ToList();
+
+                    try
+                    {
+                        DataModel = CheckHypothesisPyass(arrDiapP, arrNumP);
+                        DataModel.LabelData = arrDiapP.ToList();
+                        DataModel.StatisticData = arrProbP.ToList();
+                    }
+                    catch (Exception e)
+                    {
+                        DataModel.Conclusion = "Введенный набор данных не может подчиняется закону Пуассона";
+                    }
+
                     break;
                 case "normal":
                     double[] arrDiapN = RangeSortingNorm(arrTempT);
                     double[] arrNumN = SortNumNorm(arrTempT, arrDiapN);
+
                     DataModel = CheckHypothesisNorm(arrDiapN, arrNumN);
                     DataModel.LabelData = arrDiapN.ToList();
                     DataModel.StatisticData = arrNumN.ToList();

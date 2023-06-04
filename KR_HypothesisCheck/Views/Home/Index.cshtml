@@ -10,24 +10,67 @@
 
     <div class="container" style="min-height:100vh">
 
+        <!-- |||||||||||||||||||||||||||||||| -->
+        <!-- Выбор типа операции и ввод файла -->
+        <!-- |||||||||||||||||||||||||||||||| -->
 
-        <select class="form-select" aria-label="Default select example" id="typeSelect">
-            <option selected>Выбор распределения</option>
-            <option value="normal">Нормальное распределение</option>
-            <option value="pyasson">Распределение Пуассона</option>
-        </select>
-
-        <!-- Ввод файла -->
         <div id="inputDiv" class="mb-3">
+
+            <!-- Селектор типа операции -->
+            <h3>Тип операции</h3>
+
+            <select class="form-select mb-3" aria-label="Default select example" id="typeSelect">
+                <option value="none" selected>Выбор типа операции</option>
+                <option value="normal">Проверка статистических даннх одной партии</option>
+                <option value="pyasson">Проверка статистических даннх множества партий</option>
+            </select>
+
+            <!-- Ввод файла -->
             <h3>Выбор файла с данными</h3>
             <label for="formFile" class="form-label">CSV Файл с статистическими данными</label>
-            <input class="form-control" type="file" id="fileInput">
+            <input class="form-control mb-3" type="file" id="fileInput">
+
+
+            <!-- Выбор количества интервалов для нормального распределения | Спрятано -->
+            <div style="display: none" id="intervalRangeDiv" class="mt-1">
+                <label for="intervalRange" class="form-label">Количество интервалов: <output id="rangeValue"></output></label>
+                <br>
+                <input type="range" class="form-range" min="3" max="9" step="2" id="intervalRange" style="max-width: 25vw" value="5">
+            </div>
+
+
+
+            <!-- _________________ -->
+            <!-- Параметры графика -->
+
+            <!-- Тип графика 1 -->
+            <select class="form-select mb-3" aria-label="График функции" id="firstChartStyle" style="max-width: 25vw">
+                <option selected value="line">Линейный</option>
+                <option value="polygonLine">Полигон</option>
+                <option value="bar">Гистограмма</option>
+            </select>
+            <!-- Тип графика 3 -->
+            <select class="form-select mb-3" aria-label="График эмпиричесих данных" id="secondChartStyle" style="max-width: 25vw">
+                <option value="line">Линейный</option>
+                <option value="polygonLine">Полигон</option>
+                <option selected value="bar">Гистограмма</option>
+            </select>
+
+            <!-- Заполнение графика -->
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="fillSwitch">
+                <label class="form-check-label" for="fillSwitch">Заливка графика</label>
+            </div>
+
+
         </div>
 
         <!-- Кнопка "Выбрать другой файл" | Спрятано -->
         <div id="btnChangeFile" style="display: none" class="mb-3">
             <button class="btn btn-outline-secondary" onclick="location.reload();">Выбрать другой файл</button>
         </div>
+
+
 
         <!-- Уведомлении о неверном файле | Спрятано -->
         <div class="toast-container position-fixed top-50 start-0 p-3">
@@ -41,13 +84,37 @@
             </div>
         </div>
 
+        <!-- Уведомлении о не выбранном типе операции | Спрятано -->
+        <div class="toast-container position-fixed top-50 start-0 p-3">
+            <div class="toast align-items-center text-light bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" id="opLiveToast">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        Не выбран тип операции.
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- |||||||||||||| -->
         <!-- Блок с выводом -->
+        <!-- |||||||||||||| -->
+        
+        <!-- Блок с выводом -->
+        <div id="textBlock" style="display: none;">
+            <h2 id="ConclusionText"></h2>
+            <p id="text"></p>
+        </div>
+        
+        <!-- Блок данных -->
         <div id="returnBlock" style="display: none;">
 
             <!-- Таблица -->
-            <div class="flex-row mb-2">
+            <div class="flex-row mb-2 border-top border-secondary-subtle">
                 <h3>Данные</h3>
-                <a href="#" class="link-success"> XML </a>
+                <a href="#" class="link-success"> XLS </a>
                 <a href="#" class="link-success"> CSV </a>
                 <a href="#" class="link-primary"> TXT </a>
             </div>
@@ -61,7 +128,7 @@
             </div>
         </div>
 
-        <p id="text"></p>
+        <p style="color: lightgray; font-size:10px;" id="debugText"></p>
     </div>
 
 </div>
@@ -69,4 +136,4 @@
 
 
 <script src="~/js/resultChart.js"></script>
-<script src="~/js/fileInput.js"></script>
+<script src="~/js/input.js"></script>
