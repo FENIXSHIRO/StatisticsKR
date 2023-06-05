@@ -332,6 +332,10 @@ namespace KR_HypothesisCheck.Controllers
             return Json(jsonString);
         }
 
+        public IActionResult Info()
+        {
+            return View();
+        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
